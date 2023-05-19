@@ -1,12 +1,28 @@
 <!DOCTYPE html>
-<html lang="en">
+<html>
 <head>
-    <meta charset="UTF-8">
-    <meta http-equiv="X-UA-Compatible" content="IE=edge">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Document</title>
+  <title>Chat Room</title>
+  <script src="/socket.io/socket.io.js"></script>
+  <script>
+    const socket = io();
+
+    socket.on('message', (data) => {
+      const message = document.createElement('p');
+      message.textContent = data;
+      document.getElementById('messages').appendChild(message);
+    });
+
+    function sendMessage() {
+      const input = document.getElementById('messageInput');
+      const message = input.value;
+      input.value = '';
+      socket.emit('message', message);
+    }
+  </script>
 </head>
 <body>
-    
+  <div id="messages"></div>
+  <input type="text" id="messageInput" />
+  <button onclick="sendMessage()">Send</button>
 </body>
 </html>
