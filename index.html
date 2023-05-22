@@ -2,6 +2,38 @@
 <html>
 <head>
   <title>Chat Room</title>
+  <style>
+    body {
+      font-family: Arial, sans-serif;
+      margin: 0;
+      padding: 20px;
+      background-color: #f2f2f2;
+    }
+
+    h1 {
+      text-align: center;
+    }
+
+    #messages {
+      margin-bottom: 10px;
+      padding: 10px;
+      background-color: #fff;
+      border-radius: 5px;
+      overflow-y: scroll;
+      height: 300px;
+    }
+
+    #messageInput {
+      width: 70%;
+      padding: 5px;
+      font-size: 14px;
+    }
+
+    #sendButton {
+      padding: 5px 10px;
+      font-size: 14px;
+    }
+  </style>
   <script src="/socket.io/socket.io.js"></script>
   <script>
     const socket = io();
@@ -10,19 +42,31 @@
       const message = document.createElement('p');
       message.textContent = data;
       document.getElementById('messages').appendChild(message);
+      // Automatically scroll to the bottom
+      document.getElementById('messages').scrollTop = document.getElementById('messages').scrollHeight;
     });
 
     function sendMessage() {
       const input = document.getElementById('messageInput');
-      const message = input.value;
-      input.value = '';
-      socket.emit('message', message);
+      const message = input.value.trim();
+      if (message !== '') {
+        input.value = '';
+        socket.emit('message', message);
+      }
+    }
+
+    function handleKeyDown(event) {
+      if (event.key === 'Enter') {
+        event.preventDefault();
+        sendMessage();
+      }
     }
   </script>
 </head>
 <body>
+  <h1>Chat Room</h1>
   <div id="messages"></div>
-  <input type="text" id="messageInput" />
-  <button onclick="sendMessage()">Send</button>
+  <input type="text" id="messageInput" placeholder="Type your message..." onkeydown="handleKeyDown(event)" />
+  <button id="sendButton" onclick="sendMessage()">Send</button>
 </body>
 </html>
