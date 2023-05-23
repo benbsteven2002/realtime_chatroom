@@ -72,6 +72,51 @@
       padding: 5px 10px;
       font-size: 14px;
     }
+
+    #fileUploadButton {
+      padding: 5px 10px;
+      font-size: 14px;
+    }
+
+    #fileTransferContainer {
+    max-width: 400px;
+    margin: 0 auto;
+    background-color: #fff;
+    padding: 20px;
+    border-radius: 5px;
+    box-shadow: 0 0 5px rgba(0, 0, 0, 0.3);
+    }
+
+    #fileTransferContainer h1 {
+      text-align: center;
+    }
+
+    #fileTransferContainer button {
+      padding: 8px 12px;
+      font-size: 16px;
+      background-color: #007bff;
+      color: #fff;
+      border: none;
+      border-radius: 4px;
+      cursor: pointer;
+    }
+
+    #fileTransferContainer h3 {
+      margin-top: 20px;
+    }
+
+    #fileTransferContainer ul {
+      list-style: none;
+      padding: 0;
+    }
+
+    #fileTransferContainer li {
+      margin-bottom: 10px;
+      padding: 5px;
+      background-color: #f2f2f2;
+      border-radius: 4px;
+    }
+
   </style>
   <script src="/socket.io/socket.io.js"></script>
   <script>
@@ -150,6 +195,30 @@
       }
     }
 
+    function openFileUploadDialog() {
+      // hide the chat
+      document.getElementById('chatContainer').style.display = 'none';
+      // show the file transfer
+      document.getElementById('fileTransferContainer').style.display = 'block';
+    }
+
+    function hideFileScreen() {
+      // show the file transfer
+      document.getElementById('fileTransferContainer').style.display = 'none';
+      // hide the chat
+      document.getElementById('chatContainer').style.display = 'block';
+    }
+
+    function handleFileChange(event) {
+      const selectedFile = event.target.files[0];
+      console.log(selectedFile)
+      // Do something with the selected file, such as storing it in a variable or displaying its details
+    }
+
+    function uploadFile() {
+
+    }
+
   </script>
 </head>
 <body>
@@ -166,11 +235,30 @@
     <h1>Chat Room</h1>
     <div id="messages"></div>
     <input type="text" id="messageInput" placeholder="Type your message..." onkeydown="handleKeyDown(event)" />
+    <button id="fileUploadButton" onclick="openFileUploadDialog()">File Transfer</button>
     <button id="sendButton" onclick="sendMessage()">Send</button>
     <h3>Online Users:</h3>
     <div id="onlineUsers">
       <ul id="onlineUsersList"></ul>
     </div>
   </div>
+
+  <div id="fileTransferContainer" style="display: none;">
+    <h1>File Transfer Room</h1>
+    <div>
+      <div>
+        <input type="file" id="fileInput" onchange="handleFileChange(event)" />
+        <button id="uploadButton" onclick="uploadFile()">Upload</button>
+        <span id="fileStatus"></span>
+      </div>
+      <progress id="fileUploadProgress" value="0" max="100"></progress>
+    </div>
+    <h3>Files available to download from server:</h3>
+    <div id="files" style="border: 1px solid #ccc; padding: 10px; height: 200px; overflow-y: auto;"></div>
+    <div style="display: flex; justify-content: flex-end; margin-top: 10px;">
+      <button id="hide" onclick="hideFileScreen()">Hide</button>
+    </div>
+  </div>
+
 </body>
 </html>
