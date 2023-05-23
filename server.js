@@ -27,10 +27,8 @@ io.on('connection', (socket) => {
       socket.username = username;
       users.add(username);
       console.log(`User ${username} connected`);
-      // Notify other clients that a new user has joined
-      socket.broadcast.emit('userJoined', username);
-      // Send the updated list of online users to all clients
-      io.emit('onlineUsers', Array.from(users));
+      // Send the updated list of online users to client
+      io.emit('onlineUsers', Array.from(users))
     }
   });
 
@@ -40,15 +38,33 @@ io.on('connection', (socket) => {
     io.emit('message', { username: socket.username, message: data });
   });
 
+  // Handle incoming whisper
+  socket.on('whisper', (data) => {
+    const { username, messageContent } = data;
+    const whisperMessage = "/w " + messageContent;
+
+    // Send the message to the specific user 
+    const targetSocket = Array.from(io.sockets.sockets.values()).find(
+      (socket) => socket.username === username
+    );
+
+    // Emit the whisper message to the sender
+    socket.emit('whisper', { username: socket.username, message: whisperMessage });
+
+
+    if (targetSocket) {
+      targetSocket.emit('whisper', { username: socket.username, message: whisperMessage });
+    }
+  });
+
+
   // Handle user disconnection
   socket.on('disconnect', () => {
     if (socket.username) {
       console.log(`User ${socket.username} disconnected`);
       users.delete(socket.username);
       // Notify other clients that a user has left
-      socket.broadcast.emit('userLeft', socket.username);
-      // Update the list
-      io.emit('onlineUsers', Array.from(users));
+      io.emit('onlineUsers', Array.from(users))
     }
   });
 });
