@@ -121,6 +121,7 @@
   <script src="/socket.io/socket.io.js"></script>
   <script>
     const socket = io();
+    let selectedFile;
 
     function handleLogin() {
       const usernameInput = document.getElementById('usernameInput');
@@ -172,6 +173,16 @@
       messagesContainer.scrollTop = messagesContainer.scrollHeight;
     });
 
+    socket.on('fileUploaded', (files) => {
+      const uploadedFilesPanel = document.getElementById('files');
+      uploadedFilesPanel.innerHTML = '';
+      files.forEach((file) => {
+        const fileElement = document.createElement('p');
+        fileElement.textContent = file;
+        uploadedFilesPanel.appendChild(fileElement);
+      });
+    });
+
     function sendMessage() {
       const input = document.getElementById('messageInput');
       const message = input.value.trim();
@@ -210,14 +221,64 @@
     }
 
     function handleFileChange(event) {
-      const selectedFile = event.target.files[0];
+      selectedFile = event.target.files[0];
       console.log(selectedFile)
-      // Do something with the selected file, such as storing it in a variable or displaying its details
     }
 
-    function uploadFile() {
+    function uploadFileToServer() {
+      // Check if a file is selected
+      if (selectedFile) {
+        // Create a new FormData object
+        const formData = new FormData();
 
+        // Append the selected file to the FormData object
+        formData.append('file', selectedFile, selectedFile.name);
+
+        // Create a new XMLHttpRequest object
+        const xhr = new XMLHttpRequest();
+
+        // Configure the request
+        xhr.open('POST', '/upload', true);
+
+        // Set up the progress event handler
+        xhr.upload.onprogress = function (event) {
+          const progress = (event.loaded / event.total) * 100;
+          // Update the progress bar with the calculated progress value
+          updateProgressBar(progress);
+        };
+
+        // Set up the load event handler
+        xhr.onload = function () {
+          // File upload completed successfully
+          if (xhr.status === 200) {
+            console.log('File uploaded successfully');
+          } else {
+            console.log('File upload failed');
+          }
+        };
+
+        // Set up the error event handler
+        xhr.onerror = function () {
+          console.log('An error occurred during the file upload');
+        };
+
+        // Send the request with the FormData object as the payload
+        xhr.send(formData);
+      } else {
+        console.log('No file selected');
+      }
     }
+
+    function updateProgressBar(progress) {
+      const progressBar = document.getElementById('fileUploadProgress');
+      
+      // Ensure the progress value is within the valid range of 0 to 100
+      const clampedProgress = Math.max(0, Math.min(progress, 100));
+      
+      // Update the value attribute of the progress bar
+      progressBar.value = clampedProgress;
+    }
+
 
   </script>
 </head>
@@ -248,13 +309,14 @@
     <div>
       <div>
         <input type="file" id="fileInput" onchange="handleFileChange(event)" />
-        <button id="uploadButton" onclick="uploadFile()">Upload</button>
+        <button id="uploadButton" onclick="uploadFileToServer()">Upload</button>
         <span id="fileStatus"></span>
       </div>
       <progress id="fileUploadProgress" value="0" max="100"></progress>
     </div>
     <h3>Files available to download from server:</h3>
     <div id="files" style="border: 1px solid #ccc; padding: 10px; height: 200px; overflow-y: auto;"></div>
+      <ul id="fileList"></ul>
     <div style="display: flex; justify-content: flex-end; margin-top: 10px;">
       <button id="hide" onclick="hideFileScreen()">Hide</button>
     </div>

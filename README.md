@@ -1,5 +1,5 @@
 # realtime_chatroom
-Client-server chatroom
+Client-server program
 
 ######################
 To run server:
@@ -20,4 +20,8 @@ Functionality and overview:
 
 ######################
 BUGS:
-- currently, a user can whisper to anything...
+- currently, a user can whisper to anything... 
+    e.g. /w not_a_username hello void
+
+UPGRADES:
+- multiple file upload
