@@ -330,7 +330,15 @@
 
       if (selectedFileDown) {
         console.log('Selected file:', selectedFileDown);
-        
+
+        // Create a download link
+        const downloadLink = document.createElement('a');
+        downloadLink.href = '/download/' + selectedFileDown;
+        downloadLink.download = selectedFileDown;
+
+      // Simulate a click on the download link
+      downloadLink.click();
+
       } else {
         console.log('No file selected');
       }

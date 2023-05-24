@@ -3,6 +3,7 @@ const http = require('http');
 const socketIO = require('socket.io');
 const multer = require('multer');
 const fs = require('fs');
+const path = require('path');
 
 
 const app = express();
@@ -19,6 +20,22 @@ app.get('/', (req, res) => {
   res.sendFile(__dirname + '/index.html');
 });
 
+// Define a route for downloading a file
+app.get('/download/:filename', (req, res) => {
+  const filename = req.params.filename;
+  const filePath = path.join(__dirname, '/uploads/', filename);
+
+  // Send the file as the response
+  res.download(filePath, (err) => {
+    if (err) {
+      // Handle file download error
+      console.error('Error downloading file:', err);
+      res.status(404).send('File not found');
+    }
+  });
+});
+
+// Upload request
 app.post('/upload', upload.single('file'), (req, res) => {
   if (req.file) {
     console.log('File uploaded:', req.file);
