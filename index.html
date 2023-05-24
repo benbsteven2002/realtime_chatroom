@@ -117,6 +117,31 @@
       border-radius: 4px;
     }
 
+    #fileInput {
+      display: none;
+    }
+
+    .custom-file-upload {
+      padding: 8px 12px;
+      font-size: 16px;
+      background-color: #007bff;
+      color: #fff;
+      border: none;
+      border-radius: 4px;
+      cursor: pointer;
+    }
+
+    #fileLabel {
+      display: inline-block;
+      padding: 8px 12px;
+      font-size: 16px;
+      background-color: #007bff;
+      color: #fff;
+      border: none;
+      border-radius: 4px;
+      cursor: pointer;
+    }
+
   </style>
   <script src="/socket.io/socket.io.js"></script>
   <script>
@@ -177,11 +202,21 @@
       const uploadedFilesPanel = document.getElementById('files');
       uploadedFilesPanel.innerHTML = '';
       files.forEach((file) => {
-        const fileElement = document.createElement('p');
-        fileElement.textContent = file;
+        const fileElement = document.createElement('div');
+        const radioButton = document.createElement('input');
+        radioButton.type = 'radio';
+        radioButton.name = 'fileSelection';
+        radioButton.value = file;
+        fileElement.appendChild(radioButton);
+
+        const fileLabel = document.createElement('label');
+        fileLabel.textContent = file;
+        fileElement.appendChild(fileLabel);
+
         uploadedFilesPanel.appendChild(fileElement);
       });
     });
+
 
     function sendMessage() {
       const input = document.getElementById('messageInput');
@@ -222,6 +257,8 @@
 
     function handleFileChange(event) {
       selectedFile = event.target.files[0];
+      const selectedFileLabel = document.getElementById('selectedFileLabel');
+      selectedFileLabel.textContent = selectedFile.name
       console.log(selectedFile)
     }
 
@@ -252,6 +289,7 @@
           // File upload completed successfully
           if (xhr.status === 200) {
             console.log('File uploaded successfully');
+            updateProgressBar(0)
           } else {
             console.log('File upload failed');
           }
@@ -279,10 +317,30 @@
       progressBar.value = clampedProgress;
     }
 
+    function downloadFile() {
+      const fileRadios = document.getElementsByName('fileSelection');
+      let selectedFileDown;
+
+      for (const radio of fileRadios) {
+        if (radio.checked) {
+          selectedFileDown = radio.value;
+          break;
+        }
+      }
+
+      if (selectedFileDown) {
+        console.log('Selected file:', selectedFileDown);
+        
+      } else {
+        console.log('No file selected');
+      }
+    }
+
 
   </script>
 </head>
 <body>
+
   <div id="loginContainer">
     <h1>Welcome to the Chat Room</h1>
     <form id="loginForm" onsubmit="event.preventDefault(); handleLogin();">
@@ -307,18 +365,23 @@
   <div id="fileTransferContainer" style="display: none;">
     <h1>File Transfer Room</h1>
     <div>
-      <div>
-        <input type="file" id="fileInput" onchange="handleFileChange(event)" />
-        <button id="uploadButton" onclick="uploadFileToServer()">Upload</button>
-        <span id="fileStatus"></span>
-      </div>
-      <progress id="fileUploadProgress" value="0" max="100"></progress>
+    <div style="display: flex; justify-content: space-between; align-items: center; margin-top: 10px;">
+      <label for="fileInput" id="fileLabel" class="custom-file-upload">Select file</label>
+      <input type="file" id="fileInput" onchange="handleFileChange(event)" style="display: none;" />
+      <label id="selectedFileLabel" class="selected-file-label">No file selected</label>
+
+      <button id="uploadButton" onclick="uploadFileToServer()">Upload</button>
+
+    </div>
+    <div style="display: flex; justify-content: center; align-items: center; padding-top: 20px;">
+      <progress id="fileUploadProgress" value="0" max="100" style="width: 80%;"></progress>
+    </div>
     </div>
     <h3>Files available to download from server:</h3>
     <div id="files" style="border: 1px solid #ccc; padding: 10px; height: 200px; overflow-y: auto;"></div>
-      <ul id="fileList"></ul>
-    <div style="display: flex; justify-content: flex-end; margin-top: 10px;">
+    <div style="display: flex; justify-content: space-between; align-items: center; margin-top: 10px;">
       <button id="hide" onclick="hideFileScreen()">Hide</button>
+      <button id="downloadButton" onclick="downloadFile()">Download</button>
     </div>
   </div>
 
