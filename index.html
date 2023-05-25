@@ -78,6 +78,11 @@
       font-size: 14px;
     }
 
+    #callScreenButton {
+      padding: 5px 10px;
+      font-size: 14px;
+    }
+
     #fileTransferContainer {
     max-width: 400px;
     margin: 0 auto;
@@ -163,6 +168,7 @@
     socket.on('loginSuccess', () => {
       // Hide the login container
       document.getElementById('loginContainer').style.display = 'none';
+
 
       // Show the chat container
       document.getElementById('chatContainer').style.display = 'block';
@@ -253,6 +259,20 @@
       document.getElementById('fileTransferContainer').style.display = 'none';
       // hide the chat
       document.getElementById('chatContainer').style.display = 'block';
+    }
+
+    function callScreen() {
+      // show the call screen
+      document.getElementById('callScreen').style.display = 'block';
+      // hide the chat
+      document.getElementById('chatContainer').style.display = 'none';
+    }
+
+    function hideCallScreen() {
+      // show the chat
+      document.getElementById('chatContainer').style.display = 'block';
+      // hide the call screen
+      document.getElementById('callScreen').style.display = 'none';
     }
 
     function handleFileChange(event) {
@@ -362,6 +382,7 @@
     <h1>Chat Room</h1>
     <div id="messages"></div>
     <input type="text" id="messageInput" placeholder="Type your message..." onkeydown="handleKeyDown(event)" />
+    <button id="callScreenButton" onclick="callScreen()">Call</button>
     <button id="fileUploadButton" onclick="openFileUploadDialog()">File Transfer</button>
     <button id="sendButton" onclick="sendMessage()">Send</button>
     <h3>Online Users:</h3>
@@ -392,6 +413,19 @@
       <button id="downloadButton" onclick="downloadFile()">Download</button>
     </div>
   </div>
+
+  <div id="callScreen" style="display: none;">
+    <h2>Chat Room</h2>
+    <div>
+      <h3>...screens...</h3>
+    </div>
+    <div id="buttonContainer">
+      <button id="joinCallButton">Join Call</button>
+      <button id="hideScreenButton"  onclick="hideCallScreen()">Hide</button>
+      <button id="endCallButton">End Call</button>
+    </div>
+  </div>
+
 
 </body>
 </html>

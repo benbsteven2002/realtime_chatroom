@@ -17,7 +17,8 @@ Functionality and overview:
     -> 1. clients can upload files to server
     -> 2. clients can download files from server
 
-6. Next is VOIP maybe?
+6. Next is VOIP and voice notes
+https://www.geeksforgeeks.org/how-to-make-a-video-call-app-in-node-js/
 
 ###############
 BUGS:
