@@ -63,7 +63,7 @@
     }
 
     #messageInput {
-      width: 70%;
+      width: 60%;
       padding: 5px;
       font-size: 14px;
     }
@@ -81,6 +81,12 @@
     #callScreenButton {
       padding: 5px 10px;
       font-size: 14px;
+    }
+
+    #voiceNoteButton {
+      padding: 5px 10px;
+      font-size: 14px;
+      width: 70px;
     }
 
     #fileTransferContainer {
@@ -147,11 +153,51 @@
       cursor: pointer;
     }
 
+    #voiceContainer {
+      position: fixed;
+      top: 50%;
+      left: 50%;
+      transform: translate(-50%, -50%);
+      z-index: 9999;
+      width: 325px;
+      background-color: #fff;
+      padding: 20px;
+      border-radius: 5px;
+      box-shadow: 0 0 10px rgba(0, 0, 0, 0.3);
+      backdrop-filter: blur(5px);
+      -webkit-backdrop-filter: blur(5px);
+    }
+
+    #voiceContainer h2 {
+      text-align: center;
+    }
+
+    #voiceContainer button {
+      display: block;
+      margin-top: 10px;
+      padding: 8px 12px;
+      font-size: 16px;
+      background-color: #007bff;
+      color: #fff;
+      border: none;
+      border-radius: 4px;
+      cursor: pointer;
+    }
+    
+    .button-container {
+      display: flex;
+      justify-content: space-between;
+    }
+    
   </style>
+  <link rel="icon" type="image/png" href="/favicon-32x32.png">
   <script src="/socket.io/socket.io.js"></script>
   <script>
     const socket = io();
     let selectedFile;
+    let voiceRecorder;
+    let chunks = [];
+
 
     function handleLogin() {
       const usernameInput = document.getElementById('usernameInput');
@@ -191,6 +237,32 @@
       messagesContainer.appendChild(messageElement);
       // Automatically scroll to the bottom
       messagesContainer.scrollTop = messagesContainer.scrollHeight;
+    });
+
+    socket.on('audio', (blobs) => {
+      console.log("receiving audio");
+      console.log(blobs);
+
+      const messagesContainer = document.getElementById('messages');
+      const messageElement = document.createElement('div');
+      messageElement.classList.add('message');
+
+      // Create an audio element for the voice note
+      const audioElement = document.createElement('audio');
+      const audioData = new Blob(blobs, { type: 'audio/webm' });
+      const audioUrl = URL.createObjectURL(audioData);
+      audioElement.src = audioUrl;
+      audioElement.controls = true;
+
+      // Append the audio element to the message container
+      messageElement.appendChild(audioElement);
+
+      // Append the message container to the messages container
+      messagesContainer.appendChild(messageElement);
+
+      // Automatically scroll to the bottom
+      messagesContainer.scrollTop = messagesContainer.scrollHeight;
+
     });
 
     socket.on('whisper', (data) => {
@@ -363,10 +435,89 @@
         console.log('No file selected');
       }
     }
+    
+    function startRecording() {
+      navigator.mediaDevices.getUserMedia({ audio: true })
+        .then((stream) => {
+          voiceRecorder = new MediaRecorder(stream);
+          voiceRecorder.addEventListener('dataavailable', handleDataAvailable);
+          voiceRecorder.start();
+          console.log('Recording started.');
+          document.getElementById('voiceNoteButton').textContent = 'Stop';
+        })
+        .catch((error) => {
+          console.error('Error accessing microphone:', error);
+        });
+      }
+      
+    function stopRecording() {
+      if (voiceRecorder && voiceRecorder.state !== 'inactive') {
+        voiceRecorder.stop();
+        console.log('Recording stopped.');
+        document.getElementById('voiceNoteButton').textContent = 'Record';
+        
+        setTimeout(() => {
+          handleAudioElement();
+          showVoiceNotePopup();
+        }, 500);
+      }
+    }
+    
+    function handleDataAvailable(event) {
+      if (event.data.size > 0) {
+        chunks.push(event.data);
+      }
+    }
+    
+    function playRecording() {
+      if (chunks.length === 0) {
+        console.log('No recording available.');
+        return;
+      }
+      console.log("Playing recording:")
 
+      const blob = new Blob(chunks, { type: 'audio/webm' });
+      const url = URL.createObjectURL(blob);
+
+      const audioElement = new Audio(url);
+      audioElement.play();
+    }
+    
+    function showVoiceNotePopup() {
+      const popup = document.getElementById('voiceContainer');
+      popup.style.display = 'block';
+
+    }
+    
+    function hideVoiceNotePopup() {
+      const popup = document.getElementById('voiceContainer');
+      popup.style.display = 'none';
+    }
+
+    function handleAudioElement() {
+      const audioData = new Blob(chunks, { type: 'audio/webm' });
+      const audioUrl = URL.createObjectURL(audioData);
+
+      const audioPlayer = document.getElementById('voicePlayer');
+      audioPlayer.src = audioUrl;
+    }
+
+    function cancelVoiceNote() {
+      chunks = []
+      hideVoiceNotePopup();
+    }
+
+    function sendVoiceNote() {
+      hideVoiceNotePopup();
+      console.log(chunks);
+      socket.emit('message', "Sent voice note:")
+      socket.emit('audio', chunks);
+      chunks = []
+    }
 
   </script>
 </head>
+
 <body>
 
   <div id="loginContainer">
@@ -382,12 +533,32 @@
     <h1>Chat Room</h1>
     <div id="messages"></div>
     <input type="text" id="messageInput" placeholder="Type your message..." onkeydown="handleKeyDown(event)" />
+    <button id="voiceNoteButton">Record</button>
     <button id="callScreenButton" onclick="callScreen()">Call</button>
     <button id="fileUploadButton" onclick="openFileUploadDialog()">File Transfer</button>
     <button id="sendButton" onclick="sendMessage()">Send</button>
     <h3>Online Users:</h3>
     <div id="onlineUsers">
       <ul id="onlineUsersList"></ul>
+    </div>
+  </div>
+  <script>
+    document.getElementById('voiceNoteButton').addEventListener('click', () => {
+      if (voiceRecorder && voiceRecorder.state === 'recording') {
+        stopRecording();
+      } else {
+        startRecording();
+      }
+    });
+  </script>
+
+  <div id="voiceContainer" style="display: none;">
+    <h2>Voice Note</h2>
+    <div id="waveform"></div>
+    <audio id="voicePlayer" controls></audio>
+    <div class="button-container">
+      <button onclick="cancelVoiceNote()">Cancel</button>
+      <button onclick="sendVoiceNote()">Send</button>
     </div>
   </div>
 

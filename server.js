@@ -70,7 +70,9 @@ io.on('connection', (socket) => {
       socket.emit('loginSuccess');
       socket.username = username;
       users.add(username);
-      console.log(`User ${username} connected`);
+      const connectMessage = `User "${username}" connected`;
+      console.log(connectMessage);
+      io.emit('message', {username: "Server", message: connectMessage})
       // Send the updated list of online users to client
       io.emit('onlineUsers', Array.from(users));
       io.emit('fileUploaded', Array.from(files));
@@ -101,12 +103,20 @@ io.on('connection', (socket) => {
     }
   });
 
+  // Handle voice note
+  socket.on('audio', (blob) => {
+    io.emit('audio', blob);
+  });
+
   // Handle user disconnection
   socket.on('disconnect', () => {
     if (socket.username) {
       console.log(`User ${socket.username} disconnected`);
       users.delete(socket.username);
       // Notify other clients that a user has left
+      const connectMessage = `User "${socket.username}" disconnected`;
+      console.log(connectMessage);
+      io.emit('message', {username: "Server", message: connectMessage})
       io.emit('onlineUsers', Array.from(users));
     }
   });
