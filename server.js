@@ -4,6 +4,9 @@ const socketIO = require('socket.io');
 const multer = require('multer');
 const fs = require('fs');
 const path = require('path');
+const fetch = require('node-fetch');
+const apiKey = require('./config.js')
+
 
 
 const app = express();
@@ -20,7 +23,6 @@ app.get('/', (req, res) => {
   res.sendFile(__dirname + '/index.html');
 });
 
-// Define a route for downloading a file
 app.get('/download/:filename', (req, res) => {
   const filename = req.params.filename;
   const filePath = path.join(__dirname, '/uploads/', filename);
@@ -35,7 +37,6 @@ app.get('/download/:filename', (req, res) => {
   });
 });
 
-// Upload request
 app.post('/upload', upload.single('file'), (req, res) => {
   if (req.file) {
     console.log('File uploaded:', req.file);
@@ -80,9 +81,19 @@ io.on('connection', (socket) => {
   });
 
   // Handle incoming messages
-  socket.on('message', (data) => {
-    // Broadcast the message to everyone
-    io.emit('message', { username: socket.username, message: data });
+  socket.on('message', (message) => {
+    
+    // Weather request
+    if (message.startsWith("weather")) {
+      const city = message.substring(8);
+      
+      weatherRequest(city, socket);
+    } else {
+      // Else broadcast a message to everyone
+      io.emit('message', { username: socket.username, message: message });
+    }
+    
+
   });
 
   // Handle incoming whisper
@@ -104,8 +115,8 @@ io.on('connection', (socket) => {
   });
 
   // Handle voice note
-  socket.on('audio', (blob) => {
-    io.emit('audio', blob);
+  socket.on('audio', data => {
+    io.emit('audio', data);
   });
 
   // Handle user disconnection
@@ -125,3 +136,45 @@ io.on('connection', (socket) => {
 server.listen(3000, () => {
   console.log('Server is running on port 3000');
 });
+
+function weatherRequest(city, socket) {
+  getWeather(city)
+    .then(weatherData => {
+      console.log('Temperature:', weatherData.temperature);
+      console.log('Wind Speed:', weatherData.windSpeed);
+
+      // Emit the weather information to the requesting socket
+      socket.emit('message', {
+        username: 'Weather Bot',
+        message: `In ${city}, the temperature is ${weatherData.temperature}°C and the wind speed is ${weatherData.windSpeed} m/s.`
+      });
+    })
+    .catch(error => {
+      console.error('Error:', error);
+
+      // Emit an error message to the requesting socket
+      socket.emit('message', {
+        username: 'Weather Bot',
+        message: `Sorry, an error occurred while retrieving the weather for ${city}. Please try again later.`
+      });
+    });
+}
+
+async function getWeather(city) {
+  const url = `https://api.openweathermap.org/data/2.5/weather?q=${city}&appid=${apiKey}&units=metric`;
+  
+  try {
+    const response = await fetch(url);
+    const data = await response.json();
+    
+    // Extract the relevant weather information from the API response
+    const temperature = data.main.temp;
+    const windSpeed = data.wind.speed;
+
+    // Return the weather information
+    return { temperature, windSpeed };
+  } catch (error) {
+    console.error('Error fetching weather data:', error);
+    throw new Error('Failed to fetch weather data');
+  }
+}

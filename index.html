@@ -57,11 +57,6 @@
       height: 300px;
     }
 
-    #whisper {
-    color: rgb(132, 0, 255);
-    font-style: italic;
-    }
-
     #messageInput {
       width: 60%;
       padding: 5px;
@@ -188,12 +183,73 @@
       display: flex;
       justify-content: space-between;
     }
+
+    .myMessage {
+      max-width: 400px; 
+      background-color: #A7D7C5;
+      padding: 10px;
+      border-radius: 10px;
+      margin-bottom: 10px;
+    }
+    .myMessage-container {
+      display: flex;
+      justify-content: flex-end;
+    }
+    .myMessage-container .myMessage {
+      background-color: #A7D7C5;
+    }
+
+    .message {
+      max-width: 400px; 
+      background-color: #F3F3F3;
+      padding: 10px;
+      border-radius: 10px;
+      margin-bottom: 10px;
+    }
+    .message-container {
+      display: flex;
+    }
+    .message-container .message {
+      background-color: #F3F3F3;
+    }
+
+    .wMessage {
+      max-width: 400px; 
+      background-color: #C8A2C8;
+      padding: 10px;
+      border-radius: 10px;
+      margin-bottom: 10px;
+    }
+    .wMessage-container {
+      display: flex;
+    }
+    .wMessage-container .wMessage {
+      background-color: #C8A2C8;
+    }
+
+    .myWMessage {
+      max-width: 400px; 
+      background-color: #C8A2C8;
+      padding: 10px;
+      border-radius: 10px;
+      margin-bottom: 10px;
+    }
+    .myWMessage-container {
+      display: flex;
+      justify-content: flex-end;
+    }
+    .myWMessage-container .myWMessage {
+      background-color: #C8A2C8;
+    }
+    
+
     
   </style>
   <link rel="icon" type="image/png" href="/favicon-32x32.png">
   <script src="/socket.io/socket.io.js"></script>
   <script>
     const socket = io();
+    let username = "";
     let selectedFile;
     let voiceRecorder;
     let chunks = [];
@@ -201,7 +257,7 @@
 
     function handleLogin() {
       const usernameInput = document.getElementById('usernameInput');
-      const username = usernameInput.value.trim();
+      username = usernameInput.value.trim();
       if (username !== '') {
         socket.emit('login', username);
       }
@@ -232,49 +288,62 @@
 
     socket.on('message', (data) => {
       const messagesContainer = document.getElementById('messages');
+      const messageContainer = document.createElement('div');
       const messageElement = document.createElement('p');
       messageElement.textContent = `${data.username}: ${data.message}`;
-      messagesContainer.appendChild(messageElement);
-      // Automatically scroll to the bottom
+
+      if (data.username === username) {
+        messageContainer.classList.add('myMessage-container');
+        messageElement.classList.add('myMessage');
+      } else {
+        messageContainer.classList.add('message-container');
+        messageElement.classList.add('message');
+      }
+
+      messageContainer.appendChild(messageElement);
+      messagesContainer.appendChild(messageContainer);
       messagesContainer.scrollTop = messagesContainer.scrollHeight;
     });
 
-    socket.on('audio', (blobs) => {
-      console.log("receiving audio");
-      console.log(blobs);
-
+    socket.on('audio', (data) => {
       const messagesContainer = document.getElementById('messages');
       const messageElement = document.createElement('div');
-      messageElement.classList.add('message');
-
-      // Create an audio element for the voice note
       const audioElement = document.createElement('audio');
-      const audioData = new Blob(blobs, { type: 'audio/webm' });
+      const audioData = new Blob(data.chunks, { type: 'audio/webm' });
       const audioUrl = URL.createObjectURL(audioData);
       audioElement.src = audioUrl;
       audioElement.controls = true;
 
-      // Append the audio element to the message container
+      if (data.username === username) {
+        messageElement.classList.add('myMessage-container');
+      } else {
+        messageElement.classList.add('message-container');
+      }
+
       messageElement.appendChild(audioElement);
-
-      // Append the message container to the messages container
       messagesContainer.appendChild(messageElement);
-
-      // Automatically scroll to the bottom
       messagesContainer.scrollTop = messagesContainer.scrollHeight;
-
     });
 
     socket.on('whisper', (data) => {
       const messagesContainer = document.getElementById('messages');
+      const messageContainer = document.createElement('div');
       const messageElement = document.createElement('p');
-      messageElement.textContent = `${data.username}: ${data.message}`;
-      messageElement.style.color = 'rgb(132, 0, 255)';
-      messageElement.style.fontStyle = 'italic';
-      messagesContainer.appendChild(messageElement);
-      // Automatically scroll to the bottom
+      messageElement.textContent = `${data.username}: ${data.message.substring(3)}`;
+
+      if (data.username === username) {
+        messageContainer.classList.add('myWMessage-container');
+        messageElement.classList.add('myWMessage');
+      } else {
+        messageContainer.classList.add('wMessage-container');
+        messageElement.classList.add('wMessage');
+      }
+
+      messageContainer.appendChild(messageElement);
+      messagesContainer.appendChild(messageContainer);
       messagesContainer.scrollTop = messagesContainer.scrollHeight;
     });
+
 
     socket.on('fileUploaded', (files) => {
       const uploadedFilesPanel = document.getElementById('files');
@@ -510,9 +579,14 @@
     function sendVoiceNote() {
       hideVoiceNotePopup();
       console.log(chunks);
-      socket.emit('message', "Sent voice note:")
-      socket.emit('audio', chunks);
-      chunks = []
+      const message = {
+        username: username,
+        chunks: chunks
+      };
+      console.log(message);
+      socket.emit('message', "Sent voice note:");
+      socket.emit('audio', message);
+      chunks = [];
     }
 
   </script>
