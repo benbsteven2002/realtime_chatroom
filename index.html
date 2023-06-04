@@ -2,6 +2,7 @@
 <html>
 <head>
   <title>Chat Room</title>
+  <!-- CSS -->
   <style>
     body {
       font-family: Arial, sans-serif;
@@ -245,16 +246,19 @@
 
     
   </style>
+  <!-- Photo and library links -->
   <link rel="icon" type="image/png" href="/favicon-32x32.png">
   <script src="/socket.io/socket.io.js"></script>
   <script>
+    
+    // Global variables
     const socket = io();
     let username = "";
     let selectedFile;
     let voiceRecorder;
     let chunks = [];
 
-
+    // Handle login procedure
     function handleLogin() {
       const usernameInput = document.getElementById('usernameInput');
       username = usernameInput.value.trim();
@@ -263,19 +267,21 @@
       }
     }
 
+    // If username is already taken
     socket.on('badLogin', () => {
     alert('Username is already taken. Please choose a different username.');
     });
 
+    // Login success
     socket.on('loginSuccess', () => {
       // Hide the login container
       document.getElementById('loginContainer').style.display = 'none';
-
 
       // Show the chat container
       document.getElementById('chatContainer').style.display = 'block';
     });
 
+    // Updated array of online users
     socket.on('onlineUsers', (users) => {
       const onlineUsersPanel = document.getElementById('onlineUsers');
       onlineUsersPanel.innerHTML = '';
@@ -286,6 +292,7 @@
       });
     });
 
+    // Message received
     socket.on('message', (data) => {
       const messagesContainer = document.getElementById('messages');
       const messageContainer = document.createElement('div');
@@ -305,6 +312,7 @@
       messagesContainer.scrollTop = messagesContainer.scrollHeight;
     });
 
+    // Audio message received
     socket.on('audio', (data) => {
       const messagesContainer = document.getElementById('messages');
       const messageElement = document.createElement('div');
@@ -325,6 +333,7 @@
       messagesContainer.scrollTop = messagesContainer.scrollHeight;
     });
 
+    // Whisper message received
     socket.on('whisper', (data) => {
       const messagesContainer = document.getElementById('messages');
       const messageContainer = document.createElement('div');
@@ -344,7 +353,7 @@
       messagesContainer.scrollTop = messagesContainer.scrollHeight;
     });
 
-
+    // File list uploaded
     socket.on('fileUploaded', (files) => {
       const uploadedFilesPanel = document.getElementById('files');
       uploadedFilesPanel.innerHTML = '';
@@ -363,7 +372,6 @@
         uploadedFilesPanel.appendChild(fileElement);
       });
     });
-
 
     function sendMessage() {
       const input = document.getElementById('messageInput');
@@ -474,7 +482,7 @@
       // Ensure the progress value is within the valid range of 0 to 100
       const clampedProgress = Math.max(0, Math.min(progress, 100));
       
-      // Update the value attribute of the progress bar
+      // Update the progress bar
       progressBar.value = clampedProgress;
     }
 
@@ -592,6 +600,7 @@
   </script>
 </head>
 
+<!-- Main HTML -->
 <body>
 
   <div id="loginContainer">
@@ -670,7 +679,6 @@
       <button id="endCallButton">End Call</button>
     </div>
   </div>
-
 
 </body>
 </html>

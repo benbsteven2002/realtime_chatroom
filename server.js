@@ -6,14 +6,12 @@ const fs = require('fs');
 const path = require('path');
 const fetch = require('node-fetch');
 const apiKey = require('./config.js')
-
-
-
 const app = express();
 const server = http.createServer(app);
 const io = socketIO(server);
 const upload = multer({ dest: 'uploads/' });
 
+// Global sets for user and file list
 const users = new Set();
 const files = new Set();
 
@@ -23,6 +21,7 @@ app.get('/', (req, res) => {
   res.sendFile(__dirname + '/index.html');
 });
 
+// Handle download
 app.get('/download/:filename', (req, res) => {
   const filename = req.params.filename;
   const filePath = path.join(__dirname, '/uploads/', filename);
@@ -37,6 +36,7 @@ app.get('/download/:filename', (req, res) => {
   });
 });
 
+// Handle upload
 app.post('/upload', upload.single('file'), (req, res) => {
   if (req.file) {
     console.log('File uploaded:', req.file);
@@ -58,6 +58,7 @@ app.post('/upload', upload.single('file'), (req, res) => {
   }
 });
 
+// On connection
 io.on('connection', (socket) => {
   console.log('A user session started:');
 
@@ -133,10 +134,12 @@ io.on('connection', (socket) => {
   });
 });
 
+// Listen
 server.listen(3000, () => {
   console.log('Server is running on port 3000');
 });
 
+// Handle weather request
 function weatherRequest(city, socket) {
   getWeather(city)
     .then(weatherData => {
@@ -160,6 +163,7 @@ function weatherRequest(city, socket) {
     });
 }
 
+// Fetch weather
 async function getWeather(city) {
   const url = `https://api.openweathermap.org/data/2.5/weather?q=${city}&appid=${apiKey}&units=metric`;
   
