@@ -7,9 +7,9 @@ I undertook this project with limited web development skills, and I plan to upda
 * Socket.io and NodeJS chatroom with username and whisper functionality
 * File-to-server upload using XHR (XMLHttpRequest)
 * Download file with href download link
-* Voice messages are sent as blobs of data
-* I use the OpenWeatherApp API to fetch weather information given a specific city
-* Video chat functionality is coming soon
+* Voice messages are sent as JS Objects
+* OpenWeatherApp API to fetch weather information
+* Video chat functionality coming soon
 
 ![Demo_photo](demo.png)
 
